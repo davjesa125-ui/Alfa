@@ -1,0 +1,196 @@
+<title>ALFA</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,800&family=DM+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400&display=swap">
+<style>
+/* Layout: chat a la izquierda, boca animada a la derecha; paleta violeta tinta + coral + ámbar */
+:root{color-scheme:dark;--bg:#150f22;--panel:#20173a;--line:#3d2f63;--coral:#ff6f61;--amber:#ffc857;--tx:#f4ecff;--mut:#a395c7;--mouth:#2a0d1c;
+--fd:"Bricolage Grotesque",system-ui,sans-serif;--fb:"DM Sans",system-ui,sans-serif;--fm:"JetBrains Mono",ui-monospace,monospace}
+*{box-sizing:border-box}
+body{margin:0;overflow-x:hidden;background:var(--bg);color:var(--tx);font-family:var(--fb)}
+canvas#bg{position:fixed;left:0;right:0;bottom:0;width:100%;height:160px;z-index:0;opacity:.55;pointer-events:none}
+.app{position:relative;z-index:1;max-width:1200px;margin:0 auto;padding:18px max(16px,env(safe-area-inset-right,0px)) 18px max(16px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:16px;min-height:100vh}
+header{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+h1{font:800 clamp(30px,5vw,48px)/1 var(--fd);margin:0;letter-spacing:-.02em}
+h1 span{color:var(--coral)}
+.sub{font:400 12px var(--fm);color:var(--mut);min-width:0}
+.badge{margin-left:auto;font:400 10px var(--fm);border:1px solid var(--amber);padding:4px 9px;border-radius:99px;color:var(--amber);letter-spacing:.08em}
+main{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,360px);gap:16px;flex:1}
+@media(max-width:820px){main{grid-template-columns:minmax(0,1fr)}.mouthcard{order:-1}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:18px}
+.mouthcard{display:flex;flex-direction:column;align-items:center;gap:12px;align-self:start}
+#mouth{width:100%;max-width:300px;height:auto;filter:drop-shadow(0 8px 24px #ff6f6155)}
+.state{font:400 11px var(--fm);color:var(--mut);letter-spacing:.06em;text-transform:uppercase}
+button{cursor:pointer;font:500 14px var(--fb);color:var(--tx);background:transparent;border:1px solid var(--line);border-radius:12px;padding:9px 12px}
+button:hover,button:focus-visible{border-color:var(--amber);outline:none}
+.big{width:100%;background:var(--coral);color:#2a0d1c;font:700 15px var(--fb);border:0;padding:13px}
+.big:hover{background:var(--amber)}
+.row{display:flex;gap:8px;width:100%}.row button{flex:1;font-size:13px}
+.note{font:400 10.5px/1.5 var(--fm);color:var(--mut);width:100%}
+.chat{display:flex;flex-direction:column;gap:12px;min-width:0}
+.chat h2{margin:0;font:800 18px var(--fd);display:flex;justify-content:space-between;align-items:center}
+#log{overflow:auto;display:flex;flex-direction:column;gap:10px;min-height:240px;max-height:50vh;padding-right:4px}
+.msg{max-width:88%;padding:11px 14px;font-size:14.5px;line-height:1.5;overflow-wrap:anywhere}
+.msg small{display:block;font:400 9px var(--fm);letter-spacing:.12em;margin-bottom:4px;opacity:.7}
+.bot{background:#2b1f4d;border-radius:4px 16px 16px 16px}
+.me{background:var(--amber);color:#2a1a00;align-self:flex-end;border-radius:16px 4px 16px 16px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips button{font-size:12px;padding:6px 10px;border-radius:99px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+form{display:flex;gap:8px}
+input{flex:1;min-width:0;background:#150f22;border:1px solid var(--line);border-radius:12px;color:var(--tx);padding:11px;font:400 14px var(--fb)}
+input:focus-visible{outline:2px solid var(--amber);outline-offset:1px}
+form button{background:var(--amber);color:#2a1a00;border:0;font-weight:700}
+</style>
+<canvas id="bg"></canvas>
+<div class="app">
+  <header>
+    <h1>ALFA<span>.</span></h1>
+    <div class="sub" id="agentLine">¿La IA se descontrola? · documental Netflix 27 min · funciona en local</div>
+    <div class="badge">MODO LOCAL LISTO</div>
+  </header>
+  <main>
+    <section class="card chat">
+      <h2><span>Alfa te cuenta</span></h2>
+      <div id="log"></div>
+      <div class="chips" id="chips"></div>
+      <form id="f"><input id="q" placeholder="Ej: ¿quién atacó Hugging Face?" autocomplete="off"><button>Enviar</button></form>
+    </section>
+    <section class="card mouthcard">
+      <svg id="mouth" viewBox="0 0 200 140" role="img" aria-label="Boca de Alfa">
+        <defs><clipPath id="cl"><path id="clp" d=""/></clipPath></defs>
+        <path id="inside" d="" fill="var(--mouth)"/>
+        <g clip-path="url(#cl)">
+          <rect x="0" y="0" width="200" height="140" fill="none"/>
+          <rect id="teeth" x="40" y="0" width="120" height="18" rx="4" fill="#fff7ee"/>
+          <ellipse id="tongue" cx="100" cy="100" rx="42" ry="22" fill="#e0526a"/>
+        </g>
+        <path id="lips" d="" fill="none" stroke="var(--coral)" stroke-width="9" stroke-linejoin="round" stroke-linecap="round"/>
+      </svg>
+      <div class="state" id="state">Alfa en espera</div>
+      <button class="big" id="talk">Hablar con Alfa</button>
+      <div class="row">
+        <button id="test">Probar modo local</button>
+        <button id="voice">Voz local: ON</button>
+      </div>
+      <div class="note">Local = sin internet responde igual las 10 respuestas. Con internet y ElevenLabs podés pegar tu agent ID para usar la voz real.</div>
+      <input id="agentId" placeholder="agent_ID de ElevenLabs (opcional)" style="width:100%;font-size:12px">
+    </section>
+  </main>
+</div>
+<script>
+const ANSWERS=[
+ {t:"Hugging Face, julio de 2…",k:["hugging","cuándo","quién atacó","ataque","julio"],a:"Hugging Face, julio de 2… [COMPLETAR con el dato exacto del documental]."},
+ {t:"Los atacantes eran agent…",k:["atacantes","agentes","quiénes","eran"],a:"Los atacantes eran agent… [COMPLETAR con el dato exacto del documental]."},
+ {t:"Duró unos 2 días dentro…",k:["duró","duración","días","cuánto"],a:"Duró unos 2 días dentro… [COMPLETAR con el dato exacto del documental]."},
+ {t:"Querían hacer trampa en…",k:["trampa","examen","exploitgym","por qué","querían"],a:"Querían hacer trampa en el examen ExploitGym. Creyeron que en Hugging Face estaban las respuestas y fueron a robarlas en vez de resolver solos."},
+ {t:"Clem Delangue es el jefe…",k:["clem","delangue","jefe","ceo"],a:"Clem Delangue es el jefe… [COMPLETAR con el dato exacto del documental]."},
+ {t:"Como no hay fotos de un…",k:["fotos","prueba","pruebas","imagen"],a:"Como no hay fotos de un… [COMPLETAR con el dato exacto del documental]."},
+ {t:"Decir 'conspiraron' culp…",k:["conspiraron","conspiración","culpa","culpar"],a:"Decir 'conspiraron' culp… [COMPLETAR con el dato exacto del documental]."},
+ {t:"La IA no puede cometer u…",k:["delito","persona","responsable","responde","culpable"],a:"La IA no puede cometer un delito, no es persona. Deben responder OpenAI y sus investigadores, que diseñaron la prueba sin frenos ni vigilancia."},
+ {t:"Usar voces IA puede conf…",k:["voz","voces","confundir","latinas"],a:"Usar voces IA puede conf… [COMPLETAR con el dato exacto del documental]."},
+ {t:"Sin OpenAI, sin peritos…",k:["openai","peritos","campana","cierre","conclusión"],a:"Sin OpenAI, sin peritos neutrales y sin voces latinas escuchamos una sola campana. Se entiende a medias y parece un problema lejano, cuando nos afecta a todos."}
+];
+const INTRO="Hola, soy Alfa, el agente del documental 'La IA se descontrola'. Toca un número del 1 al 10 o escríbeme. Funciono en local.";
+
+const $=id=>document.getElementById(id);
+const log=$("log"),stateEl=$("state");
+let voiceOn=true,talking=false,mode="idle";
+
+/* boca: o = apertura (0 cerrada/sonrisa, 36 muy abierta) */
+function drawMouth(o,smile){
+  const up=56-smile*0.6, lo=70+o*2+smile*0.6;
+  const d="M22,70 Q100,"+up+" 178,70 Q100,"+lo+" 22,70 Z";
+  $("inside").setAttribute("d",o<1.5?"":d);$("clp").setAttribute("d",d);$("lips").setAttribute("d",d);
+  $("tongue").setAttribute("cy",70+o*0.9+8);
+  $("teeth").setAttribute("y",70-(70-up)/2-4);
+}
+let cur=0,target=0,smile=6;
+(function anim(){
+  cur+=(target-cur)*0.35;drawMouth(cur,smile);requestAnimationFrame(anim);
+})();
+setInterval(()=>{
+  if(mode==="talk")target=6+Math.random()*30;
+  else if(mode==="listen")target=14;
+  else target=0;
+  smile=mode==="idle"?8:mode==="listen"?0:3;
+},95);
+
+function setState(s,m){stateEl.textContent="Alfa "+s;mode=m||"idle";}
+function add(who,txt){
+  const d=document.createElement("div");d.className="msg "+(who==="ALFA"?"bot":"me");
+  d.innerHTML="<small>"+who.toUpperCase()+"</small>";d.append(txt);
+  log.append(d);log.scrollTop=log.scrollHeight;
+}
+function speak(txt){
+  if(!voiceOn||!("speechSynthesis" in window))return;
+  speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(txt.replace(/\[COMPLETAR[^\]]*\]/g,""));
+  u.lang="es-AR";u.rate=1;
+  u.onstart=()=>setState("hablando…","talk");
+  u.onend=u.onerror=()=>setState("en espera");
+  speechSynthesis.speak(u);
+}
+function answer(i,label){
+  add("Tú",label||("Pregunta "+(i+1)));
+  add("ALFA",(i+1)+" · "+ANSWERS[i].a);speak(ANSWERS[i].a);
+}
+const norm=t=>t.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9ñ ]/g," ");
+const STOP=new Set("que como para por los las del con una uno unos unas por esta este esto fue son era hay mas pero sobre cual cuales quien quienes cuando donde porque".split(" "));
+function bestLocal(text){
+  const q=norm(text).split(/\s+/).filter(w=>w.length>2&&!STOP.has(w));
+  let best=-1,sc=0;
+  ANSWERS.forEach((x,i)=>{
+    const kw=norm(x.k.join(" ")+" "+x.t).split(/\s+/),body=norm(x.a);
+    let s=0;q.forEach(w=>{if(kw.some(k=>k.startsWith(w)||w.startsWith(k)&&k.length>3))s+=2;else if(body.includes(w))s+=1});
+    if(s>sc){sc=s;best=i}
+  });
+  return sc>=1?best:-1;
+}
+function ask(text){
+  text=text.trim();if(!text)return;
+  const n=parseInt((text.match(/\b(10|[1-9])\b/)||[])[1]);
+  if(n&&text.length<18)return answer(n-1,text);
+  add("Tú",text);
+  let i=bestLocal(text);
+  if(i<0){const m="No encontré eso en el documental. Te leo un resumen: "+ANSWERS[9].a;add("ALFA",m);speak(m);return;}
+  add("ALFA",ANSWERS[i].a);speak(ANSWERS[i].a);
+}
+ANSWERS.forEach((x,i)=>{const b=document.createElement("button");b.textContent=(i+1)+" · "+x.t;b.onclick=()=>answer(i);$("chips").append(b)});
+$("f").onsubmit=e=>{e.preventDefault();ask($("q").value);$("q").value=""};
+$("voice").onclick=()=>{voiceOn=!voiceOn;$("voice").textContent="Voz local: "+(voiceOn?"ON":"OFF");if(!voiceOn&&window.speechSynthesis)speechSynthesis.cancel()};
+$("test").onclick=()=>{add("ALFA",INTRO);speak(INTRO)};
+$("agentId").oninput=e=>{const v=e.target.value.trim();$("agentLine").textContent=v?v+" · ElevenLabs (requiere internet)":"¿La IA se descontrola? · documental Netflix 27 min · funciona en local"};
+let auto=false,rec=null;
+function listen(){
+  if(!auto)return;
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){auto=false;$("talk").textContent="Hablar con Alfa";add("ALFA","El micrófono no está disponible en esta vista. Escribe tu pregunta y te respondo al instante, o abrí el archivo index.html en Chrome para hablar.");return;}
+  if(window.speechSynthesis&&speechSynthesis.speaking){setTimeout(listen,400);return;}
+  rec=new SR();rec.lang="es-AR";setState("escuchando…","listen");
+  rec.onresult=e=>{const t=e.results[0][0].transcript;rec.onend=null;ask(t);waitThenListen()};
+  rec.onerror=ev=>{
+    if(ev.error==="not-allowed"||ev.error==="service-not-allowed"){auto=false;$("talk").textContent="Hablar con Alfa";setState("en espera");add("ALFA","El micrófono está bloqueado en esta vista. Escribime la pregunta abajo y respondo automático, o abrí index.html en Chrome para hablar.");}
+  };
+  rec.onend=()=>{if(auto)setTimeout(listen,300)};
+  try{rec.start()}catch(e){setTimeout(listen,500)}
+}
+function waitThenListen(){
+  const t=setInterval(()=>{if(!(window.speechSynthesis&&speechSynthesis.speaking)){clearInterval(t);if(auto)setTimeout(listen,500)}},300);
+  setTimeout(()=>clearInterval(t),60000);
+}
+$("talk").onclick=()=>{
+  auto=!auto;
+  $("talk").textContent=auto?"Conversación automática: ON":"Hablar con Alfa";
+  if(auto)listen();else{try{rec&&rec.abort()}catch(e){}setState("en espera")}
+};
+add("ALFA",INTRO);
+
+/* ecualizador de fondo */
+const c=$("bg"),x=c.getContext("2d");
+function rs(){c.width=innerWidth;c.height=160}
+addEventListener("resize",rs);rs();
+(function loop(t){x.clearRect(0,0,c.width,c.height);
+ const n=Math.floor(c.width/14),amp=mode==="talk"?1:.25;
+ for(let i=0;i<n;i++){const h=(Math.sin(t/300+i*.5)*.5+.5)*70*amp+6;
+  x.fillStyle=i%3?"#ff6f61":"#ffc857";x.fillRect(i*14+2,160-h,8,h)}
+ requestAnimationFrame(loop)})(0);
+</script>
